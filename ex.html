@@ -1,0 +1,269 @@
+  <script>
+    function butt(e) {
+      if(e.code == "Enter") {
+        analyze();
+        return false;
+      }
+      else {
+        return true;
+      }
+    }
+    iSideLength = 5;
+    function sear() {
+      for(var i = 0; i < 25; i++) {
+        document.getElementById("s" + i).classList.remove("bg-danger");
+        document.getElementById("s" + i).classList.remove("bg-warning");
+        document.getElementById("s" + i).classList.remove("bg-success");
+        document.getElementById("s" + i).classList.remove("bg-info");
+        document.getElementById("l" + i).innerHTML = "0/0/0/0";
+      }
+      for (var i = 0; i < 5; i++) {
+        document.getElementById("f" + i).value = "";
+        document.getElementById("r" + i).value = "";
+        document.getElementById("zr" + i).value = "";
+        document.getElementById("c" + i).value = "";
+        document.getElementById("zc" + i).value = "";
+    }
+  }
+
+  function asdf() {
+    c0.value=5; zc0.value = 0;
+    c1.value=5; zc1.value = 0;
+    c2.value=5; zc2.value = 0;
+    c3.value=5; zc3.value = 0;
+    c4.value=5; zc4.value = 0;
+
+    r0.value=5; zr0.value = 0;
+    r1.value=5; zr1.value = 0;
+    r2.value=5; zr2.value = 0;
+    r3.value=5; zr3.value = 0;
+    r4.value=5; zr4.value = 0;
+  }
+  function tests() {
+    console.log("." + (parseInt(f0.value)+1) + ".");
+    var b = new Board();
+    for(var i = 0; i < 25; i++) {
+     b.theBoard.push(i%5);
+     }
+   console.log(b.isComplete());
+   console.log(b.getRow(0));
+   console.log(b.getColumn(0));
+   console.log(b.isValid());
+
+   var c = new Board();
+   console.log(c.isViable());
+   var d = c.nextBoardWith(0);
+   var e = c.nextBoardWith(1);
+   console.log(d.theBoard);
+   console.log(e.theBoard);
+}
+
+ function analyze() {
+   timer.innerHTML = "";
+   var time = new Date().getTime();
+   var solutions = getSolutions(new Board());
+   var daSums = [];
+   for (var i = 0; i < 25; i++) {
+    daSums[i] = [];
+    daSums[i].push(0);
+    daSums[i].push(0);
+    daSums[i].push(0);
+    daSums[i].push(0);
+  }
+  for (var i = solutions.length - 1; i >= 0; i--) {
+    for(var j = 0; j < 25; j++) {
+     daSums[j][solutions[i].theBoard[j]]++;
+   }
+ }
+
+ var daHeuristics = [];
+ var iMax = 0;
+ for(var i = 0; i < 25; i++) {
+  var myScore = score(i, daSums[i]);
+  daHeuristics.push(myScore);
+  if( (myScore > daHeuristics[iMax]) || (myScore == daHeuristics[iMax] && daSums[iMax][1] > daSums[i][1])) iMax = i;
+}
+for(var i = 0; i < 25; i++) {
+  var e = document.getElementById("s" + i)
+  e.classList.remove("bg-success");
+  e.classList.remove("bg-danger");
+  e.classList.remove("bg-warning");
+  e.classList.remove("bg-info");
+  document.getElementById("l" + i).innerHTML = daSums[i][0] + "/" + daSums[i][1] + "/" + daSums[i][2] + "/" + daSums[i][3];
+  if(daSums[i].includes(solutions.length)) {
+    document.getElementById("f" + i).value = daSums[i].indexOf(solutions.length);
+  }
+/*        Math.round(100.*daSums[i][0]/solutions.length) + "/" +
+        Math.round(100.*daSums[i][1]/solutions.length) + "/" +
+        Math.round(100.*daSums[i][2]/solutions.length) + "/" +
+        Math.round(100.*daSums[i][3]/solutions.length); */
+        if(daSums[i][0] == 0) e.classList.add("bg-success");
+        else if(daSums[i][2] == 0 && daSums[i][3] == 0) e.classList.add("bg-danger");
+        else e.classList.add("bg-warning");
+      }
+      
+      var eRec = document.getElementById("s" + iMax);
+      eRec.classList.remove("bg-success");
+      eRec.classList.remove("bg-danger");
+      eRec.classList.remove("bg-warning");
+      eRec.classList.add("bg-info");
+      timer.innerHTML = new Date().getTime() - time + "ms";
+      document.getElementById("f" + iMax).focus();
+    }
+
+    function score(iSquare, daSums) {
+      var iTotal = 0;
+      if(document.getElementById("f" + iSquare).value != "")  {
+        iTotal -= 10*(daSums[0] + daSums[1] + daSums[2] + daSums[3]);
+      }
+      else{
+        if(daSums[0] ==0) iTotal = 0;
+        else {
+          iTotal -= daSums[0];
+          if(daSums[2] == 0 && daSums[3] == 0) iTotal -= daSums[1] + daSums[0];
+        }
+      }
+      return iTotal;
+    }
+
+    function Board() {
+    this.theBoard = []; // append in default left-right up-down order
+    
+    this.nextBoardWith = function(sSquare) {
+    	var b = new Board();
+    	for (var i = 0; i < this.theBoard.length; i++) {
+    		b.theBoard.push(this.theBoard[i]);
+    	}
+    	b.theBoard.push(sSquare);
+    	return b;
+    }
+
+    this.isComplete = function() {
+    	return this.theBoard.length == iSideLength*iSideLength;
+    }
+
+    this.getRow = function(iRow) {
+    	var saRowTBR = [];
+    	for (var i = 0; i < iSideLength; i++) {
+    		if(this.theBoard[iSideLength*iRow + i] != undefined)
+         saRowTBR.push(this.theBoard[iSideLength*iRow + i]);
+     }
+     return saRowTBR;
+   }
+
+   this.getColumn = function(iCol) {
+     var saColTBR = [];
+     for(var i = 0; i < iSideLength; i++) {
+      if(this.theBoard[i*iSideLength+iCol] != undefined)
+       saColTBR.push(this.theBoard[i*iSideLength+iCol]);
+   }
+   return saColTBR;
+ }
+
+ this.isValid = function() {
+   var bTBR = true;
+   for (var i = 0; i < iSideLength; i++ ) {
+    bTBR &= isValidLine(document.getElementById("c" + i).value, document.getElementById("zc" + i).value, this.getColumn(i));
+    bTBR &= isValidLine(document.getElementById("r" + i).value, document.getElementById("zr" + i).value, this.getRow(i));
+  }
+  return bTBR;
+}
+
+this.isViable = function() {
+ var bTBR = true;
+ for(var i = 0; i < iSideLength; i++) {
+   bTBR &= isViableLine(document.getElementById("c" + i).value, document.getElementById("zc" + i).value, this.getColumn(i));
+   bTBR &= isViableLine(document.getElementById("r" + i).value, document.getElementById("zr" + i).value, this.getRow(i));
+ }
+ return bTBR;
+}
+}
+
+function isValidLine(iScore, iVoltorb, scores) {
+  var iMyScore = 0;
+  var iMyVoltorbs = 0;
+  for (var i = scores.length - 1; i >= 0; i--) {
+    switch(scores[i]) {
+    case 0: iMyVoltorbs++; break;
+    default: iMyScore += scores[i]; break;
+    }
+  }
+
+return iMyScore == iScore && iMyVoltorbs == iVoltorb;
+}
+
+function isViableLine(iScore, iVoltorb, scores) {
+ var iMyScore = 0;
+ var iMyVoltorbs = 0;
+
+ for (var i = scores.length - 1; i >= 0; i--) {
+   switch(scores[i]) {
+    case 0: iMyVoltorbs++; break;
+    default: iMyScore += scores[i]; break;
+  }
+  }
+  var iMaxScore = iMyScore + 3*(5-scores.length);
+  var iMaxVoltorbs = iMyVoltorbs + (5-scores.length);
+  return iMyScore <= iScore && iMyVoltorbs <= iVoltorb && iMaxScore >= iScore && iMaxVoltorbs >= iVoltorb;
+}
+
+    // recursive
+    function getSolutions(b) {
+      if(b.isComplete()) {
+        var tbr = [];
+        if(b.isValid()) {                
+          tbr.push(b);
+        }
+        return tbr;
+      }
+      var lbSolutions = [];
+
+      if(document.getElementById("f" + b.theBoard.length).value == "") {
+       var next = b.nextBoardWith(0);
+       if(next.isViable()) {
+        var nextSolutions = getSolutions(next);
+        for (var i = nextSolutions.length - 1; i >= 0; i--) {
+         lbSolutions.push(nextSolutions[i]);
+       }
+     }
+
+     next = b.nextBoardWith(1);
+     if(next.isViable()) {
+      var nextSolutions = getSolutions(next);
+      for (var i = nextSolutions.length - 1; i >= 0; i--) {
+       lbSolutions.push(nextSolutions[i]);
+     }
+   }
+
+   next = b.nextBoardWith(2);
+   if(next.isViable()) {
+    var nextSolutions = getSolutions(next);
+    for (var i = nextSolutions.length - 1; i >= 0; i--) {
+     lbSolutions.push(nextSolutions[i]);
+   }
+ }
+
+ next = b.nextBoardWith(3);
+ if(next.isViable()) {
+  var nextSolutions = getSolutions(next);
+  for (var i = nextSolutions.length - 1; i >= 0; i--) {
+   lbSolutions.push(nextSolutions[i]);
+ }
+}
+}
+else {
+  var next = b.nextBoardWith(parseInt(document.getElementById("f" + b.theBoard.length).value));
+  if(next.isViable()) {
+   var nextSolutions = getSolutions(next);
+   for (var i = nextSolutions.length - 1; i >= 0; i--) {
+     lbSolutions.push(nextSolutions[i]);
+   }
+ }
+}
+return lbSolutions;
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+</body>
+</html>
